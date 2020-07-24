@@ -48,8 +48,7 @@ class _HomeState extends State<Home> {
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
+    if (!_bloc.hasReachedEnd() && (_scrollController.position.pixels == _scrollController.position.maxScrollExtent)) {
       _bloc.fetchCharacters();
     }
   }
@@ -81,7 +80,7 @@ class _HomeState extends State<Home> {
         itemCount: characterList.length <= 0 ? 0 : characterList.length + 1,
         itemBuilder: (BuildContext _context, int position) {
           return position >= characterList.length
-              ? _loadMoreProgress()
+              ? buildProgressOrReachEnd()
               : InkWell(
                   onTap: () {
                     Navigator.push(
@@ -97,7 +96,6 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildRow(List<Character> characterList, int position) {
-    print("Draw Row $position");
     return Container(
         margin: EdgeInsets.only(left: 16, top: 4, right: 16, bottom: 4),
         child: Row(
@@ -126,5 +124,11 @@ class _HomeState extends State<Home> {
         margin: EdgeInsets.only(bottom: 12),
         child: CustomLoader(width: 45.0, height: 45.0),
     );
+  }
+
+  Widget buildProgressOrReachEnd() {
+    if(!_bloc.hasReachedEnd()) {
+      return _loadMoreProgress();
+    }
   }
 }

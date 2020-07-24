@@ -7,26 +7,27 @@ class CharacterBloc {
   final _characterFetcher = PublishSubject<List<Character>>();
   final _list = List<Character>();
   int _paginationIndex = 1;
-  bool isLoading = false;
+  int _maxPage = -1;
 
   CharacterBloc(this._repository);
 
   Stream<List<Character>> get characters => _characterFetcher.stream;
 
   fetchCharacters() async {
-    isLoading = true;
     Data dataModel = await _repository.fetchCharacters(_paginationIndex);
 
-    if (dataModel != null) _paginationIndex++;
+    if (dataModel != null) {
+      _paginationIndex++;
+      _maxPage = dataModel.info.pages;
 
-    isLoading = false;
-
-    _list.addAll(dataModel.results.toList());
-
-    _characterFetcher.sink.add(_list);
+      _list.addAll(dataModel.results.toList());
+      _characterFetcher.sink.add(_list);
+    }
   }
 
   dispose() {
     _characterFetcher.close();
   }
+
+  bool hasReachedEnd() => _paginationIndex > _maxPage;
 }
