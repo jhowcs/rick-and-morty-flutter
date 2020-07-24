@@ -31,12 +31,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   ScrollController _scrollController;
-  final _bloc = CharacterBloc(CharacterRepository());
+  TextEditingController _textEditingController;
+  final _bloc = CharacterBloc(CharacterRepository(), 400);
 
   @override
   void initState() {
     super.initState();
     _bloc.fetchCharacters();
+    _textEditingController = TextEditingController();
     _scrollController = ScrollController()..addListener(_scrollListener);
   }
 
@@ -44,11 +46,14 @@ class _HomeState extends State<Home> {
   void dispose() {
     super.dispose();
     _scrollController.dispose();
+    _textEditingController.dispose();
     _bloc.dispose();
   }
 
   void _scrollListener() {
-    if (!_bloc.hasReachedEnd() && (_scrollController.position.pixels == _scrollController.position.maxScrollExtent)) {
+    if (shouldLoadMore() &&
+        (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent)) {
       _bloc.fetchCharacters();
     }
   }
@@ -56,21 +61,35 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Rick And Morty'),
-        ),
-        body: StreamBuilder(
-            stream: _bloc.characters,
-            builder: (context, AsyncSnapshot<List<Character>> snapshot) {
-              if (snapshot.hasData) {
-                return Column(children: <Widget>[
-                  Expanded(child: buildCharacterList(snapshot.data)),
-                ]);
-              } else if (snapshot.hasError) {
-                return Text(snapshot.error.toString());
-              }
-              return Center(child: CircularProgressIndicator());
-            }));
+      appBar: AppBar(
+        title: Text('Rick And Morty'),
+      ),
+      body: StreamBuilder(
+          stream: _bloc.characters,
+          builder: (context, AsyncSnapshot<List<Character>> snapshot) {
+            if (snapshot.hasData) {
+              return Column(children: <Widget>[
+                buildSearchField(),
+                Expanded(child: buildCharacterList(snapshot.data)),
+              ]);
+            } else if (snapshot.hasError) {
+              return Text(snapshot.error.toString());
+            }
+            return Center(child: CircularProgressIndicator());
+          }),
+    );
+  }
+
+  TextFormField buildSearchField() {
+    return TextFormField(
+      controller: _textEditingController,
+      decoration: InputDecoration(
+          labelText: 'Search for characters...',
+          contentPadding: EdgeInsets.all(16)),
+      onChanged: (query) {
+        _bloc.searchOnListAlreadyFetched(query);
+      },
+    );
   }
 
   Widget buildCharacterList(List<Character> characterList) {
@@ -121,14 +140,16 @@ class _HomeState extends State<Home> {
 
   Widget _loadMoreProgress() {
     return Container(
-        margin: EdgeInsets.only(bottom: 12),
-        child: CustomLoader(width: 45.0, height: 45.0),
+      margin: EdgeInsets.only(bottom: 12),
+      child: CustomLoader(width: 45.0, height: 45.0),
     );
   }
 
   Widget buildProgressOrReachEnd() {
-    if(!_bloc.hasReachedEnd()) {
+    if (shouldLoadMore()) {
       return _loadMoreProgress();
     }
   }
+
+  bool shouldLoadMore() => !_bloc.hasReachedEnd() && _textEditingController.text.isEmpty;
 }
