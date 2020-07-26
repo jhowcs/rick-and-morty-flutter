@@ -67,13 +67,16 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
           stream: _bloc.characters,
           builder: (context, AsyncSnapshot<List<Character>> snapshot) {
-            if (snapshot.hasData) {
-              return Column(children: <Widget>[
-                buildSearchField(),
-                Expanded(child: buildCharacterList(snapshot.data)),
-              ]);
-            } else if (snapshot.hasError) {
-              return Text(snapshot.error.toString());
+            if (snapshot.connectionState == ConnectionState.active ||
+                snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                return Column(children: <Widget>[
+                  buildSearchField(),
+                  Expanded(child: buildCharacterList(snapshot.data)),
+                ]);
+              } else {
+                return retryWidget();
+              }
             }
             return Center(child: CircularProgressIndicator());
           }),
@@ -151,5 +154,36 @@ class _HomeState extends State<Home> {
     }
   }
 
-  bool shouldLoadMore() => !_bloc.hasReachedEnd() && _textEditingController.text.isEmpty;
+  Widget retryWidget() {
+    return Center(
+        child: Container(
+      margin: EdgeInsets.only(left: 16, right: 16),
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'No Connection',
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 8),
+              child: Text(
+                  'You are current offline. Please check your internet settings.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18)),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 24),
+              child: RaisedButton(
+                  color: Colors.green,
+                  textColor: Colors.white,
+                  child: Text('Retry'),
+                  onPressed: () => _bloc.fetchCharacters()),
+            ),
+          ]),
+    ));
+  }
+
+  bool shouldLoadMore() =>
+      !_bloc.hasReachedEnd() && _textEditingController.text.isEmpty;
 }

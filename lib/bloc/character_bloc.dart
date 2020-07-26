@@ -18,14 +18,16 @@ class CharacterBloc {
   Stream<List<Character>> get characters => _characterFetcher.stream;
 
   fetchCharacters() async {
-    Data dataModel = await _repository.fetchCharacters(_paginationIndex);
+    try {
+      Data dataModel;
+      dataModel = await _repository.fetchCharacters(_paginationIndex);
 
-    if (dataModel != null) {
       _paginationIndex++;
       _maxPage = dataModel.info.pages;
-
       _list.addAll(dataModel.results.toList());
       _characterFetcher.sink.add(_list);
+    } catch (e) {
+      _characterFetcher.sink.add(null);
     }
   }
 
