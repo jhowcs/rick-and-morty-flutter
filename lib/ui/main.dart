@@ -28,23 +28,28 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int _currentIndex = 0;
+  int _selectedIndex = 0;
   final List<Widget> _children = [
     CharacterListUI(),
     LocationListUI(),
-    EpisodesListUI()
+    EpisodesListUI(),
   ];
+
+  final PageStorageBucket bucket = PageStorageBucket();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Rick and Morty'),
-      ),
-      body: _children[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: _onTabTapped,
-        currentIndex: _currentIndex,
+        appBar: AppBar(
+          title: Text('Rick and Morty'),
+        ),
+        body: PageStorage(bucket: bucket, child: _children[_selectedIndex]),
+        bottomNavigationBar: _bottomNavigationBar(_selectedIndex));
+  }
+
+  Widget _bottomNavigationBar(int selectedIndex) => BottomNavigationBar(
+        onTap: (int index) => setState(() => _selectedIndex = index),
+        currentIndex: selectedIndex,
         items: [
           BottomNavigationBarItem(
             icon: Icon(
@@ -65,13 +70,5 @@ class _HomeState extends State<Home> {
             title: Text('Episodes'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
+      );
 }

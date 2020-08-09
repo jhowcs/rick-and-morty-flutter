@@ -41,3 +41,7 @@ app.*.map.json
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+# you can run "flutter pub run build_runner build" to generate the files
+# Generated Dart files
+**/*.g.dart
